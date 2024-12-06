@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "474131399981",
+    "project_id": "medi-hive-cc52e",
+    "storage_bucket": "medi-hive-cc52e.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:474131399981:android:89ee40c73424b97ae53fa4",
+        "android_client_info": {
+          "package_name": "com.shahporan.medi_hive"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDcgtKHnPxOeu5rDPaLZivNEF3_0Vv_fe0"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
