@@ -1,10 +1,7 @@
-import 'package:flutter/gestures.dart';
-import 'package:flutter/material.dart';
+/*import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-
-import 'main_bottom_nav_bar_screen.dart'; // Replace with your main screen
-import 'forgot_password_screen.dart'; // Replace with your Forgot Password screen
-import 'sign_up_screen.dart'; // Replace with your SignUp screen
+import 'main_bottom_nav_bar_screen.dart'; // Your main screen
+import 'forgot_password_screen.dart'; // Your forgot password screen
 
 class SignInScreen extends StatefulWidget {
   const SignInScreen({Key? key}) : super(key: key);
@@ -15,110 +12,135 @@ class SignInScreen extends StatefulWidget {
 
 class _SignInScreenState extends State<SignInScreen> {
   final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
-  final TextEditingController _emailTEController = TextEditingController();
-  final TextEditingController _passwordTEController = TextEditingController();
+  final TextEditingController _emailController = TextEditingController();
+  final TextEditingController _passwordController = TextEditingController();
   bool _inProgress = false;
 
   @override
-  Widget build(BuildContext context) {
-    TextTheme textTheme = Theme.of(context).textTheme;
+  void initState() {
+    super.initState();
+    _checkAuthenticationState();
+  }
 
+  /// Check if the user is already signed in
+  Future<void> _checkAuthenticationState() async {
+    final user = FirebaseAuth.instance.currentUser;
+    if (user != null && user.emailVerified) {
+      // Navigate directly to the main screen if the user is already signed in and verified
+      Navigator.pushAndRemoveUntil(
+        context,
+        MaterialPageRoute(builder: (context) => const MainBottomNavBarScreen()),
+            (route) => false,
+      );
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
     return Scaffold(
-      resizeToAvoidBottomInset: false,
-      body: Container(
-        decoration: BoxDecoration(
-          gradient: LinearGradient(
-            colors: [Colors.purple.shade100, Colors.purple.shade400],
-            begin: Alignment.topLeft,
-            end: Alignment.topRight,
-          ),
-        ),
-        child: SingleChildScrollView(
-          child: Padding(
-            padding: const EdgeInsets.all(24),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
+      backgroundColor: Colors.white,
+      body: SingleChildScrollView(
+        child: Column(
+          children: [
+            // Top Decorative Section
+            Stack(
               children: [
-                const SizedBox(height: 120),
-                Text(
-                  'Get Started with',
-                  style: textTheme.headlineMedium?.copyWith(
-                    fontWeight: FontWeight.bold,
-                    color: Colors.white,
+                Container(
+                  height: 200,
+                  decoration: const BoxDecoration(
+                    color: Colors.blue,
+                    borderRadius: BorderRadius.only(
+                      bottomLeft: Radius.circular(50),
+                      bottomRight: Radius.circular(50),
+                    ),
                   ),
                 ),
-                const SizedBox(height: 24),
-                _buildSignInForm(),
-                const SizedBox(height: 24),
-                Center(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.center,
-                    children: [
-                      TextButton(
-                        onPressed: _onTapForgotPassword,
-                        child: const Text(
-                          'Forgot Password?',
-                          style: TextStyle(color: Colors.white),
-                        ),
-                      ),
-                      _buildSignUpSection(),
-                    ],
+                Positioned(
+                  top: 70,
+                  left: MediaQuery.of(context).size.width / 2 - 40,
+                  child: const Text(
+                    'Log In',
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontWeight: FontWeight.bold,
+                      fontSize: 24,
+                    ),
                   ),
                 ),
               ],
             ),
-          ),
-        ),
-      ),
-    );
-  }
 
-  Widget _buildSignInForm() {
-    return Form(
-      key: _formKey,
-      child: Column(
-        children: [
-          _buildTextField(
-            controller: _emailTEController,
-            hintText: 'Email',
-            keyboardType: TextInputType.emailAddress,
-            validator: (value) =>
-            value!.isEmpty ? 'Enter a valid email!' : null,
-          ),
-          const SizedBox(height: 8),
-          _buildTextField(
-            controller: _passwordTEController,
-            hintText: 'Password',
-            obscureText: true,
-            validator: (value) {
-              if (value!.isEmpty) {
-                return 'Enter a valid password!';
-              }
-              if (value.length <= 2) {
-                return 'Please enter more than 2 characters!';
-              }
-              return null;
-            },
-          ),
-          const SizedBox(height: 24),
-          Visibility(
-            visible: !_inProgress,
-            replacement: const CircularProgressIndicator(),
-            child: ElevatedButton(
-              onPressed: _inProgress ? null : _onTapNextButton,
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.white, // Button color
-                shape: const CircleBorder(),
-                padding: const EdgeInsets.all(16),
-              ),
-              child: const Icon(
-                Icons.arrow_circle_right_outlined,
-                color: Colors.green,
-                size: 24,
+            // Login Form Section
+            Padding(
+              padding: const EdgeInsets.all(16.0),
+              child: Form(
+                key: _formKey,
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    _buildTextField(
+                      controller: _emailController,
+                      hintText: 'E-mail number',
+                      keyboardType: TextInputType.emailAddress,
+                      validator: (value) => value!.isEmpty
+                          ? 'Enter a valid e-mail number'
+                          : null,
+                    ),
+                    const SizedBox(height: 16),
+                    _buildTextField(
+                      controller: _passwordController,
+                      hintText: 'Password',
+                      obscureText: true,
+                      validator: (value) {
+                        if (value!.isEmpty) {
+                          return 'Enter a valid password';
+                        }
+                        if (value.length <= 2) {
+                          return 'Password must be more than 2 characters';
+                        }
+                        return null;
+                      },
+                    ),
+                    const SizedBox(height: 24),
+                    Center(
+                      child: ElevatedButton(
+                        onPressed: _inProgress ? null : _onTapSignInButton,
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: Colors.blue,
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 100, vertical: 16),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                        ),
+                        child: const Text(
+                          'Log In',
+                          style: TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 16),
+                    Center(
+                      child: TextButton(
+                        onPressed: _onTapForgotPassword,
+                        child: const Text(
+                          'Forgot Password?',
+                          style: TextStyle(
+                            color: Colors.blue,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
               ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
@@ -138,37 +160,18 @@ class _SignInScreenState extends State<SignInScreen> {
       decoration: InputDecoration(
         hintText: hintText,
         filled: true,
-        fillColor: Colors.white,
+        fillColor: const Color(0xFFF5F5F5),
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(8.0),
+          borderSide: BorderSide.none,
         ),
+        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
       ),
       validator: validator,
     );
   }
 
-  Widget _buildSignUpSection() {
-    return RichText(
-      text: TextSpan(
-        style: const TextStyle(
-          color: Colors.white,
-          fontWeight: FontWeight.w600,
-          fontSize: 14,
-          letterSpacing: 0.6,
-        ),
-        text: "Don't have an account? ",
-        children: [
-          TextSpan(
-            text: 'Sign Up',
-            style: const TextStyle(color: Colors.yellow),
-            recognizer: TapGestureRecognizer()..onTap = _onTapSignUpButton,
-          ),
-        ],
-      ),
-    );
-  }
-
-  void _onTapNextButton() {
+  void _onTapSignInButton() {
     if (_formKey.currentState!.validate()) {
       _signInWithFirebase();
     }
@@ -180,21 +183,278 @@ class _SignInScreenState extends State<SignInScreen> {
     });
 
     try {
-      await FirebaseAuth.instance.signInWithEmailAndPassword(
-        email: _emailTEController.text.trim(),
-        password: _passwordTEController.text,
+      UserCredential userCredential = await FirebaseAuth.instance
+          .signInWithEmailAndPassword(
+        email: _emailController.text.trim(),
+        password: _passwordController.text,
       );
 
+      User? user = userCredential.user;
+
+      if (user != null && user.emailVerified) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Signed in successfully!')),
+        );
+
+        Navigator.pushAndRemoveUntil(
+          context,
+          MaterialPageRoute(
+              builder: (context) => const MainBottomNavBarScreen()),
+              (route) => false,
+        );
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+              content: Text(
+                  'Email not verified. Please verify your email and try again.')),
+        );
+        await FirebaseAuth.instance.signOut(); // Sign out unverified users
+      }
+    } on FirebaseAuthException catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Signed in successfully!')),
+        SnackBar(content: Text(e.message ?? 'An error occurred')),
       );
+    } finally {
+      setState(() {
+        _inProgress = false;
+      });
+    }
+  }
 
-      // Navigate to Main Screen or Dashboard
+  void _onTapForgotPassword() {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => const ForgotPasswordScreen(),
+      ),
+    );
+  }
+}*/
+import 'package:flutter/material.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'main_bottom_nav_bar_screen.dart'; // Your main screen
+import 'forgot_password_screen.dart'; // Your forgot password screen
+import 'sign_up_screen.dart'; // Your sign-up screen
+
+class SignInScreen extends StatefulWidget {
+  const SignInScreen({Key? key}) : super(key: key);
+
+  @override
+  State<SignInScreen> createState() => _SignInScreenState();
+}
+
+class _SignInScreenState extends State<SignInScreen> {
+  final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
+  final TextEditingController _emailController = TextEditingController();
+  final TextEditingController _passwordController = TextEditingController();
+  bool _inProgress = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _checkAuthenticationState();
+  }
+
+  /// Check if the user is already signed in
+  Future<void> _checkAuthenticationState() async {
+    final user = FirebaseAuth.instance.currentUser;
+    if (user != null && user.emailVerified) {
       Navigator.pushAndRemoveUntil(
         context,
         MaterialPageRoute(builder: (context) => const MainBottomNavBarScreen()),
             (route) => false,
       );
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: Colors.white,
+      body: SingleChildScrollView(
+        child: Column(
+          children: [
+            // Top Decorative Section
+            Stack(
+              children: [
+                Container(
+                  height: 200,
+                  decoration: const BoxDecoration(
+                    color: Colors.blue,
+                    borderRadius: BorderRadius.only(
+                      bottomLeft: Radius.circular(50),
+                      bottomRight: Radius.circular(50),
+                    ),
+                  ),
+                ),
+                Positioned(
+                  top: 70,
+                  left: MediaQuery.of(context).size.width / 2 - 40,
+                  child: const Text(
+                    'Log In',
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontWeight: FontWeight.bold,
+                      fontSize: 24,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+
+            // Login Form Section
+            Padding(
+              padding: const EdgeInsets.all(16.0),
+              child: Form(
+                key: _formKey,
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    _buildTextField(
+                      controller: _emailController,
+                      hintText: 'E-mail number',
+                      keyboardType: TextInputType.emailAddress,
+                      validator: (value) => value!.isEmpty
+                          ? 'Enter a valid e-mail number'
+                          : null,
+                    ),
+                    const SizedBox(height: 16),
+                    _buildTextField(
+                      controller: _passwordController,
+                      hintText: 'Password',
+                      obscureText: true,
+                      validator: (value) {
+                        if (value!.isEmpty) {
+                          return 'Enter a valid password';
+                        }
+                        if (value.length <= 2) {
+                          return 'Password must be more than 2 characters';
+                        }
+                        return null;
+                      },
+                    ),
+                    const SizedBox(height: 24),
+                    Center(
+                      child: ElevatedButton(
+                        onPressed: _inProgress ? null : _onTapSignInButton,
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: Colors.blue,
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 100, vertical: 16),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                        ),
+                        child: const Text(
+                          'Log In',
+                          style: TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 16),
+                    Center(
+                      child: TextButton(
+                        onPressed: _onTapForgotPassword,
+                        child: const Text(
+                          'Forgot Password?',
+                          style: TextStyle(
+                            color: Colors.blue,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 16),
+                    Center(
+                      child: TextButton(
+                        onPressed: _onTapSignUp,
+                        child: const Text(
+                          "Don't have an account? Sign Up",
+                          style: TextStyle(
+                            color: Colors.blue,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildTextField({
+    required TextEditingController controller,
+    required String hintText,
+    TextInputType keyboardType = TextInputType.text,
+    bool obscureText = false,
+    String? Function(String?)? validator,
+  }) {
+    return TextFormField(
+      controller: controller,
+      keyboardType: keyboardType,
+      obscureText: obscureText,
+      autovalidateMode: AutovalidateMode.onUserInteraction,
+      decoration: InputDecoration(
+        hintText: hintText,
+        filled: true,
+        fillColor: const Color(0xFFF5F5F5),
+        border: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(8.0),
+          borderSide: BorderSide.none,
+        ),
+        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+      ),
+      validator: validator,
+    );
+  }
+
+  void _onTapSignInButton() {
+    if (_formKey.currentState!.validate()) {
+      _signInWithFirebase();
+    }
+  }
+
+  Future<void> _signInWithFirebase() async {
+    setState(() {
+      _inProgress = true;
+    });
+
+    try {
+      UserCredential userCredential = await FirebaseAuth.instance
+          .signInWithEmailAndPassword(
+        email: _emailController.text.trim(),
+        password: _passwordController.text,
+      );
+
+      User? user = userCredential.user;
+
+      if (user != null && user.emailVerified) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Signed in successfully!')),
+        );
+
+        Navigator.pushAndRemoveUntil(
+          context,
+          MaterialPageRoute(
+              builder: (context) => const MainBottomNavBarScreen()),
+              (route) => false,
+        );
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+              content: Text(
+                  'Email not verified. Please verify your email and try again.')),
+        );
+        await FirebaseAuth.instance.signOut(); // Sign out unverified users
+      }
     } on FirebaseAuthException catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text(e.message ?? 'An error occurred')),
@@ -215,19 +475,12 @@ class _SignInScreenState extends State<SignInScreen> {
     );
   }
 
-  void _onTapSignUpButton() {
+  void _onTapSignUp() {
     Navigator.push(
       context,
       MaterialPageRoute(
         builder: (context) => const SignUpScreen(),
       ),
     );
-  }
-
-  @override
-  void dispose() {
-    _emailTEController.dispose();
-    _passwordTEController.dispose();
-    super.dispose();
   }
 }

@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:medi_hive/UI/screens/splash_screen.dart';
+import 'package:medi_hive/UI/screens/welcome_screen.dart';
 
 import 'UI/utils/appcolor.dart';
 
@@ -15,14 +15,14 @@ class _MediHiveState extends State<MediHive> {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      debugShowCheckedModeBanner: false,
+
       navigatorKey: MediHive.navigatorkey,
       theme: ThemeData(
         textTheme: const TextTheme(),
         inputDecorationTheme: _inputDecorationTheme(),
         elevatedButtonTheme: _elevatedButtonThemeData(),
       ),
-      home:const SplashScreen(),
+      home:const WelcomeScreen(),
     );
   }
   ElevatedButtonThemeData _elevatedButtonThemeData()

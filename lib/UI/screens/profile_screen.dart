@@ -3,8 +3,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_database/firebase_database.dart';
 
 import 'main_bottom_nav_bar_screen.dart';
-//import 'main_screen.dart'; // Import your MainScreen here
-import 'sign_in_screen.dart'; // Import SignInScreen
+import 'sign_in_screen.dart';
 
 class ProfileScreen extends StatefulWidget {
   const ProfileScreen({Key? key}) : super(key: key);
@@ -15,10 +14,11 @@ class ProfileScreen extends StatefulWidget {
 
 class _ProfileScreenState extends State<ProfileScreen> {
   final TextEditingController _emailController = TextEditingController();
-  final TextEditingController _firstNameController = TextEditingController();
-  final TextEditingController _lastNameController = TextEditingController();
+  final TextEditingController _nameController = TextEditingController();
   final TextEditingController _phoneController = TextEditingController();
-  final TextEditingController _passwordController = TextEditingController();
+  final TextEditingController _currentPasswordController = TextEditingController();
+  final TextEditingController _newPasswordController = TextEditingController();
+  final TextEditingController _confirmPasswordController = TextEditingController();
 
   bool _inProgress = false;
   bool _isEditing = false;
@@ -50,8 +50,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
       if (snapshot.exists) {
         Map data = snapshot.value as Map;
         _emailController.text = data['email'] ?? '';
-        _firstNameController.text = data['firstName'] ?? '';
-        _lastNameController.text = data['lastName'] ?? '';
+        _nameController.text = '${data['firstName'] ?? ''} ${data['lastName'] ?? ''}';
         _phoneController.text = data['mobile'] ?? '';
       } else {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -70,6 +69,21 @@ class _ProfileScreenState extends State<ProfileScreen> {
   }
 
   Future<void> _updateProfile() async {
+    if (_isEditing &&
+        (_newPasswordController.text != _confirmPasswordController.text)) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('New passwords do not match!')),
+      );
+      return;
+    }
+
+    if (_isEditing && _newPasswordController.text == _currentPasswordController.text) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('New password cannot be the same as the old password!')),
+      );
+      return;
+    }
+
     setState(() {
       _inProgress = true;
     });
@@ -86,14 +100,15 @@ class _ProfileScreenState extends State<ProfileScreen> {
       DatabaseReference userRef =
       FirebaseDatabase.instance.ref('users/${user.uid}');
       await userRef.update({
-        'firstName': _firstNameController.text.trim(),
-        'lastName': _lastNameController.text.trim(),
+        'firstName': _nameController.text.split(' ').first.trim(),
+        'lastName': _nameController.text.split(' ').length > 1
+            ? _nameController.text.split(' ').last.trim()
+            : '',
         'mobile': _phoneController.text.trim(),
       });
 
-      if (_passwordController.text.isNotEmpty) {
-        // Update password and log out the user
-        await user.updatePassword(_passwordController.text.trim());
+      if (_newPasswordController.text.isNotEmpty) {
+        await user.updatePassword(_newPasswordController.text.trim());
         await FirebaseAuth.instance.signOut();
 
         ScaffoldMessenger.of(context).showSnackBar(
@@ -103,14 +118,11 @@ class _ProfileScreenState extends State<ProfileScreen> {
           ),
         );
 
-        // Navigate to the Login Screen after sign out
         Navigator.of(context).pushAndRemoveUntil(
-
           MaterialPageRoute(builder: (context) => const SignInScreen()),
               (route) => false,
         );
-
-        return; // Stop further execution
+        return;
       }
 
       ScaffoldMessenger.of(context).showSnackBar(
@@ -135,95 +147,86 @@ class _ProfileScreenState extends State<ProfileScreen> {
   Widget build(BuildContext context) {
     return WillPopScope(
       onWillPop: () async {
-        // Redirect back to the main screen instead of exiting the app
         Navigator.of(context).pushReplacement(
           MaterialPageRoute(builder: (context) => const MainBottomNavBarScreen()),
         );
-        return false; // Prevent the default behavior of exiting the app
+        return false;
       },
       child: Scaffold(
         appBar: AppBar(
-          title: const Text('Profile'),
-          backgroundColor: Colors.blueAccent,
+          title: const Text('My Profile'),
+          backgroundColor: Colors.teal,
         ),
-        body: Container(
-          decoration: BoxDecoration(
-            gradient: LinearGradient(
-              colors: [Colors.blue.shade100, Colors.blue.shade400],
-              begin: Alignment.topCenter,
-              end: Alignment.bottomCenter,
-            ),
-          ),
-          child: _inProgress
-              ? const Center(child: CircularProgressIndicator())
-              : SingleChildScrollView(
-            padding: const EdgeInsets.all(24.0),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  'Your Profile',
-                  style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                    fontWeight: FontWeight.bold,
-                    color: Colors.white,
-                  ),
-                ),
-                const SizedBox(height: 24),
+        body: _inProgress
+            ? const Center(child: CircularProgressIndicator())
+            : Padding(
+          padding: const EdgeInsets.all(16.0),
+          child: Column(
+            children: [
+              _buildProfileField(
+                icon: Icons.person,
+                label: 'Name',
+                controller: _nameController,
+                readOnly: !_isEditing,
+              ),
+              const SizedBox(height: 16),
+              _buildProfileField(
+                icon: Icons.email,
+                label: 'Email',
+                controller: _emailController,
+                readOnly: true,
+              ),
+              const SizedBox(height: 16),
+              _buildProfileField(
+                icon: Icons.phone,
+                label: 'Phone Number',
+                controller: _phoneController,
+                readOnly: !_isEditing,
+              ),
+              const SizedBox(height: 16),
+              _buildProfileField(
+                icon: Icons.lock,
+                label: 'Password',
+                controller: _currentPasswordController,
+                readOnly: true,
+                obscureText: true,
+              ),
+              if (_isEditing) ...[
+                const SizedBox(height: 16),
                 _buildProfileField(
-                  controller: _emailController,
-                  label: 'Email',
-                  readOnly: true,
+                  icon: Icons.lock,
+                  label: 'New Password',
+                  controller: _newPasswordController,
+                  obscureText: true,
                 ),
                 const SizedBox(height: 16),
                 _buildProfileField(
-                  controller: _firstNameController,
-                  label: 'First Name',
-                  readOnly: !_isEditing,
-                ),
-                const SizedBox(height: 16),
-                _buildProfileField(
-                  controller: _lastNameController,
-                  label: 'Last Name',
-                  readOnly: !_isEditing,
-                ),
-                const SizedBox(height: 16),
-                _buildProfileField(
-                  controller: _phoneController,
-                  label: 'Mobile Number',
-                  keyboardType: TextInputType.phone,
-                  readOnly: !_isEditing,
-                ),
-                if (_isEditing)
-                  const SizedBox(height: 16),
-                if (_isEditing)
-                  _buildProfileField(
-                    controller: _passwordController,
-                    label: 'New Password',
-                    obscureText: true,
-                  ),
-                const SizedBox(height: 32),
-                Center(
-                  child: ElevatedButton(
-                    onPressed: _isEditing ? _updateProfile : () {
-                      setState(() {
-                        _isEditing = true;
-                      });
-                    },
-                    style: ElevatedButton.styleFrom(
-                      padding: const EdgeInsets.symmetric(
-                          horizontal: 48, vertical: 16),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                    ),
-                    child: Text(
-                      _isEditing ? 'Save Changes' : 'Edit Profile',
-                      style: const TextStyle(fontWeight: FontWeight.bold),
-                    ),
-                  ),
+                  icon: Icons.lock_outline,
+                  label: 'Confirm New Password',
+                  controller: _confirmPasswordController,
+                  obscureText: true,
                 ),
               ],
-            ),
+              const Spacer(),
+              ElevatedButton(
+                onPressed: _isEditing ? _updateProfile : () {
+                  setState(() {
+                    _isEditing = true;
+                  });
+                },
+                style: ElevatedButton.styleFrom(
+                  minimumSize: const Size(double.infinity, 48),
+                  backgroundColor: Colors.teal,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                ),
+                child: Text(
+                  _isEditing ? 'Save Changes' : 'Update Profile',
+                  style: const TextStyle(fontSize: 16),
+                ),
+              ),
+            ],
           ),
         ),
       ),
@@ -231,30 +234,28 @@ class _ProfileScreenState extends State<ProfileScreen> {
   }
 
   Widget _buildProfileField({
-    required TextEditingController controller,
+    required IconData icon,
     required String label,
-    TextInputType keyboardType = TextInputType.text,
-    bool obscureText = false,
+    required TextEditingController controller,
     bool readOnly = false,
+    bool obscureText = false,
   }) {
     return TextField(
       controller: controller,
-      keyboardType: keyboardType,
-      obscureText: obscureText,
       readOnly: readOnly,
+      obscureText: obscureText,
       decoration: InputDecoration(
+        prefixIcon: Icon(icon, color: Colors.teal),
         labelText: label,
+        labelStyle: const TextStyle(fontSize: 14, fontWeight: FontWeight.bold),
         filled: true,
-        fillColor: Colors.white,
+        fillColor: Colors.grey.shade100,
         border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12.0),
+          borderRadius: BorderRadius.circular(12),
+          borderSide: BorderSide.none,
         ),
-        contentPadding: const EdgeInsets.symmetric(
-          horizontal: 16.0,
-          vertical: 12.0,
-        ),
+        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
       ),
     );
   }
 }
-

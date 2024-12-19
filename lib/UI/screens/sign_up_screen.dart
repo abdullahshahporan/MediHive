@@ -2,6 +2,9 @@ import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_database/firebase_database.dart';
+import 'package:medi_hive/UI/screens/sign_in_screen.dart';
+
+import 'confirmation_screen.dart';
 
 class SignUpScreen extends StatefulWidget {
   const SignUpScreen({Key? key}) : super(key: key);
@@ -12,105 +15,155 @@ class SignUpScreen extends StatefulWidget {
 
 class _SignUpScreenState extends State<SignUpScreen> {
   final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
-  final TextEditingController _emailTEController = TextEditingController();
-  final TextEditingController _firstNameTEController = TextEditingController();
-  final TextEditingController _lastNameTEController = TextEditingController();
-  final TextEditingController _mobileTEController = TextEditingController();
-  final TextEditingController _passwordTEController = TextEditingController();
+  final TextEditingController _emailController = TextEditingController();
+  final TextEditingController _firstNameController = TextEditingController();
+  final TextEditingController _lastNameController = TextEditingController();
+  final TextEditingController _mobileController = TextEditingController();
+  final TextEditingController _passwordController = TextEditingController();
   bool _inProgress = false;
 
   @override
   Widget build(BuildContext context) {
-    TextTheme textTheme = Theme.of(context).textTheme;
-
     return Scaffold(
-      body: Container(
-        decoration: BoxDecoration(
-          gradient: LinearGradient(
-            colors: [Colors.blue.shade100, Colors.blue.shade400],
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-          ),
-        ),
-        child: SingleChildScrollView(
-          child: Padding(
-            padding: const EdgeInsets.all(24),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
+      backgroundColor: Colors.white,
+      body: SingleChildScrollView(
+        child: Column(
+          children: [
+            // Top Decorative Section
+            Stack(
               children: [
-                const SizedBox(height: 82),
-                Text(
-                  'Join With Us',
-                  style: textTheme.headlineMedium?.copyWith(
-                    fontWeight: FontWeight.bold,
-                    color: Colors.white,
+                Container(
+                  height: 200,
+                  decoration: const BoxDecoration(
+                    color: Colors.blue,
+                    borderRadius: BorderRadius.only(
+                      bottomLeft: Radius.circular(50),
+                      bottomRight: Radius.circular(50),
+                    ),
                   ),
                 ),
-                const SizedBox(height: 24),
-                _buildSignUpForm(),
-                const SizedBox(height: 24),
-                Center(
-                  child: _buildHaveAccountSection(),
+                Positioned(
+                  top: 50,
+                  left: 16,
+                  child: IconButton(
+                    icon: const Icon(Icons.arrow_back, color: Colors.white),
+                    onPressed: () => Navigator.pop(context),
+                  ),
+                ),
+                Positioned(
+                  top: 70,
+                  left: MediaQuery.of(context).size.width / 2 - 40,
+                  child: const Text(
+                    'Sign Up',
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontWeight: FontWeight.bold,
+                      fontSize: 24,
+                    ),
+                  ),
                 ),
               ],
             ),
-          ),
-        ),
-      ),
-    );
-  }
 
-  Widget _buildSignUpForm() {
-    return Form(
-      key: _formKey,
-      child: Column(
-        children: [
-          _buildTextField(
-            controller: _emailTEController,
-            hintText: 'Email',
-            keyboardType: TextInputType.emailAddress,
-            validator: (value) =>
-            value!.isEmpty || !value.contains('@') ? 'Enter valid email' : null,
-          ),
-          const SizedBox(height: 8),
-          _buildTextField(
-            controller: _firstNameTEController,
-            hintText: 'First name',
-            validator: (value) => value!.isEmpty ? 'Enter first name' : null,
-          ),
-          const SizedBox(height: 8),
-          _buildTextField(
-            controller: _lastNameTEController,
-            hintText: 'Last name',
-            validator: (value) => value!.isEmpty ? 'Enter last name' : null,
-          ),
-          const SizedBox(height: 8),
-          _buildTextField(
-            controller: _mobileTEController,
-            hintText: 'Mobile',
-            keyboardType: TextInputType.phone,
-            validator: (value) =>
-            value!.isEmpty || value.length < 10 ? 'Enter valid mobile number' : null,
-          ),
-          const SizedBox(height: 8),
-          _buildTextField(
-            controller: _passwordTEController,
-            hintText: 'Password',
-            obscureText: true,
-            validator: (value) => value!.isEmpty || value.length < 6
-                ? 'Password must be at least 6 characters'
-                : null,
-          ),
-          const SizedBox(height: 24),
-          Visibility(
-            visible: !_inProgress,
-            replacement: const CircularProgressIndicator(),
-            child: ElevatedButton(
-              onPressed: _onTapNextButton,
-              child: const Icon(Icons.arrow_circle_right_outlined),
+            // Form Section
+            Padding(
+              padding: const EdgeInsets.all(16.0),
+              child: Form(
+                key: _formKey,
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    _buildTextField(
+                      controller: _emailController,
+                      hintText: 'Email',
+                      keyboardType: TextInputType.emailAddress,
+                      validator: (value) => value!.isEmpty || !value.contains('@')
+                          ? 'Enter a valid email'
+                          : null,
+                    ),
+                    const SizedBox(height: 16),
+                    _buildTextField(
+                      controller: _firstNameController,
+                      hintText: 'First Name',
+                      validator: (value) =>
+                      value!.isEmpty ? 'Enter your first name' : null,
+                    ),
+                    const SizedBox(height: 16),
+                    _buildTextField(
+                      controller: _lastNameController,
+                      hintText: 'Last Name',
+                      validator: (value) =>
+                      value!.isEmpty ? 'Enter your last name' : null,
+                    ),
+                    const SizedBox(height: 16),
+                    _buildTextField(
+                      controller: _mobileController,
+                      hintText: 'Mobile Number',
+                      keyboardType: TextInputType.phone,
+                      validator: (value) =>
+                      value!.isEmpty || value.length < 11
+                          ? 'Enter a valid mobile number'
+                          : null,
+                    ),
+                    const SizedBox(height: 16),
+                    _buildTextField(
+                      controller: _passwordController,
+                      hintText: 'Password',
+                      obscureText: true,
+                      validator: (value) =>
+                      value!.isEmpty || value.length < 6
+                          ? 'Password must be at least 6 characters'
+                          : null,
+                    ),
+                    const SizedBox(height: 24),
+                    Center(
+                      child: ElevatedButton(
+                        onPressed: _onTapSignUpButton,
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: Colors.blue,
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 100, vertical: 16),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                        ),
+                        child: const Text(
+                          'Sign Up',
+                          style: TextStyle(
+                              fontSize: 16, fontWeight: FontWeight.bold),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 16),
+                    Center(
+                      child: RichText(
+                        text: TextSpan(
+                          text: 'Already have an account? ',
+                          style: const TextStyle(color: Colors.black54),
+                          children: [
+                            TextSpan(
+                              text: 'Sign In',
+                              style: const TextStyle(
+                                color: Colors.blue,
+                                fontWeight: FontWeight.bold,
+                              ),
+                              recognizer: TapGestureRecognizer()
+                                ..onTap = () => Navigator.pushAndRemoveUntil(
+                                  context,
+                                  MaterialPageRoute(builder: (context) => const SignInScreen()),
+                                      (route) => false,
+                            ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
@@ -130,39 +183,42 @@ class _SignUpScreenState extends State<SignUpScreen> {
       decoration: InputDecoration(
         hintText: hintText,
         filled: true,
-        fillColor: Colors.white,
+        fillColor: const Color(0xFFF5F5F5),
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(8.0),
+          borderSide: BorderSide.none,
         ),
+        contentPadding:
+        const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
       ),
       validator: validator,
     );
   }
 
-  Widget _buildHaveAccountSection() {
-    return RichText(
-      text: TextSpan(
-        style: const TextStyle(
-          color: Colors.black,
-          fontWeight: FontWeight.w600,
-          fontSize: 14,
-          letterSpacing: 0.5,
-        ),
-        text: "Have account? ",
-        children: [
-          TextSpan(
-            text: 'Sign In',
-            style: const TextStyle(color: Colors.blue),
-            recognizer: TapGestureRecognizer()..onTap = _onTapSignIn,
-          ),
-        ],
-      ),
-    );
-  }
-
-  void _onTapNextButton() {
+  Future<void> _onTapSignUpButton() async {
     if (_formKey.currentState!.validate()) {
-      _signUpWithFirebase();
+      final confirm = await showDialog<bool>(
+        context: context,
+        builder: (context) => AlertDialog(
+          title: const Text('Confirm Sign Up'),
+          content:
+           Text('Are you sure you want to create a new account? Plese Recheck the details before proceeding.'),
+
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context, false),
+              child: const Text('No'),
+            ),
+            ElevatedButton(
+              onPressed: () => Navigator.pop(context, true),
+              child: const Text('Yes'),
+            ),
+          ],
+        ),
+      );
+      if (confirm == true) {
+        _signUpWithFirebase();
+      }
     }
   }
 
@@ -172,34 +228,41 @@ class _SignUpScreenState extends State<SignUpScreen> {
     });
 
     try {
-      // Sign up with Firebase Authentication
-      UserCredential userCredential = await FirebaseAuth.instance
-          .createUserWithEmailAndPassword(
-        email: _emailTEController.text.trim(),
-        password: _passwordTEController.text,
+      UserCredential userCredential =
+      await FirebaseAuth.instance.createUserWithEmailAndPassword(
+        email: _emailController.text.trim(),
+        password: _passwordController.text,
       );
 
       User? user = userCredential.user;
       if (user != null) {
-        // Save user data to Firebase Realtime Database
         DatabaseReference userRef =
         FirebaseDatabase.instance.ref('users/${user.uid}');
         await userRef.set({
-          'email': _emailTEController.text.trim(),
-          'firstName': _firstNameTEController.text.trim(),
-          'lastName': _lastNameTEController.text.trim(),
-          'mobile': _mobileTEController.text.trim(),
+          'email': _emailController.text.trim(),
+          'firstName': _firstNameController.text.trim(),
+          'lastName': _lastNameController.text.trim(),
+          'mobile': _mobileController.text.trim(),
         });
 
+        await user.sendEmailVerification();
+        await FirebaseAuth.instance.signOut();
+
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('User successfully signed up!')),
+          const SnackBar(
+              content: Text(
+                  'Account created successfully! A verification email has been sent.')),
         );
-        _clearTextFields();
-        Navigator.pop(context); // Navigate to the previous screen
+
+        Navigator.pushAndRemoveUntil(
+          context,
+          MaterialPageRoute(builder: (context) => const ConfirmationScreen()),
+              (route) => false,
+        );
       }
-    } on FirebaseAuthException catch (e) {
+    } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(e.message ?? 'An error occurred')),
+        SnackBar(content: Text(e.toString())),
       );
     } finally {
       setState(() {
@@ -208,25 +271,14 @@ class _SignUpScreenState extends State<SignUpScreen> {
     }
   }
 
-  void _clearTextFields() {
-    _emailTEController.clear();
-    _firstNameTEController.clear();
-    _lastNameTEController.clear();
-    _mobileTEController.clear();
-    _passwordTEController.clear();
-  }
-
-  void _onTapSignIn() {
-    Navigator.pop(context);
-  }
-
   @override
   void dispose() {
-    _emailTEController.dispose();
-    _firstNameTEController.dispose();
-    _lastNameTEController.dispose();
-    _mobileTEController.dispose();
-    _passwordTEController.dispose();
+    _emailController.dispose();
+    _firstNameController.dispose();
+    _lastNameController.dispose();
+    _mobileController.dispose();
+    _passwordController.dispose();
     super.dispose();
   }
 }
+
